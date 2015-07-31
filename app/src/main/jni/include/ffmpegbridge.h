@@ -12,7 +12,7 @@ extern "C" {
  * Method:    init
  * Signature: (Lio/cine/ffmpegbridge/FFmpegBridge/AVOptions;)V
  */
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
+JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
   (JNIEnv *, jobject, jobject);
 
 /*

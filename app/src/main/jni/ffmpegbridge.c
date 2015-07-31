@@ -19,7 +19,7 @@ FFmpegBridgeContext* br_ctx;
 // JNI interface
 //
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
+JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
 (JNIEnv *env, jobject jThis, jobject jOpts) {
 
   const char *output_fmt_name, *output_url;
@@ -65,6 +65,8 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
 
   (*env)->ReleaseStringUTFChars(env, outputFormatNameString, output_fmt_name);
   (*env)->ReleaseStringUTFChars(env, outputUrlString, output_url);
+
+  return br_ctx->error;
 }
 
 JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setAudioCodecExtraData

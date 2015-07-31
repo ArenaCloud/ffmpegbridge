@@ -156,15 +156,20 @@ int _open_output_url(FFmpegBridgeContext *br_ctx){
   }
 }
 
+static AVBitStreamFilterContext* bsfc = NULL;
 uint8_t* _filter_packet(FFmpegBridgeContext *br_ctx, AVStream *st, AVPacket *packet) {
   int rc = 0;
-  uint8_t *filtered_data;
+  uint8_t *filtered_data = NULL;
   int filtered_data_size = 0;
 
   if (st->codec->codec_id == br_ctx->audio_codec_id) {
     LOGD("About to filter audio packet buffer ...");
-    filtered_data = av_malloc(packet->size);
-    AVBitStreamFilterContext* bsfc = av_bitstream_filter_init("aac_adtstoasc");
+    
+    if(bsfc==NULL)
+    {
+    	bsfc = av_bitstream_filter_init("aac_adtstoasc");
+    }
+//    AVBitStreamFilterContext* bsfc = av_bitstream_filter_init("aac_adtstoasc");
     if (!bsfc) {
       LOGE("Error creating aac_adtstoasc bitstream filter.");
     }
@@ -172,6 +177,11 @@ uint8_t* _filter_packet(FFmpegBridgeContext *br_ctx, AVStream *st, AVPacket *pac
       &filtered_data, &filtered_data_size,
       packet->data, packet->size,
       packet->flags & AV_PKT_FLAG_KEY);
+/*      AVPacket new_pkt = *packet;
+      rc = av_bitstream_filter_filter(bsfc, st->codec, NULL,
+      &new_pkt.data, &new_pkt.size,
+      packet->data, packet->size,
+      packet->flags & AV_PKT_FLAG_KEY);*/
     if (rc < 0) {
       LOGE("ERROR: Failed to filter bitstream -- %s", av_err2str(rc));
     }
@@ -199,7 +209,7 @@ void _rescale_packet(FFmpegBridgeContext *br_ctx, AVStream *st, AVPacket *packet
 void _write_packet(FFmpegBridgeContext *br_ctx, AVPacket *packet) {
   int rc;
 
-  LOGD("writing frame to stream %d: (pts=%lld, size=%d)",
+  LOGD("start writing frame to stream %d: (pts=%lld, size=%d)",
     packet->stream_index, packet->pts, packet->size);
 
   rc = av_interleaved_write_frame(br_ctx->output_fmt_ctx, packet);
@@ -207,6 +217,9 @@ void _write_packet(FFmpegBridgeContext *br_ctx, AVPacket *packet) {
     LOGE("ERROR: _write_packet stream (stream %d) -- %s",
       packet->stream_index, av_err2str(rc));
   }
+
+    LOGD("end writing frame to stream %d: (pts=%lld, size=%d)",
+    packet->stream_index, packet->pts, packet->size);
 }
 
 void _write_trailer(FFmpegBridgeContext *br_ctx){
@@ -275,11 +288,14 @@ FFmpegBridgeContext* ffmpbr_init(
   rc = _open_output_url(br_ctx);
   if (rc < 0){
     LOGE("ERROR: ffmpbr_prepare_stream error -- %s", av_err2str(rc));
+    br_ctx->error = IO_ERROR;
+    return br_ctx;
   }
 
   LOGD("logging (dumping) output_fmt_ctx log ...");
   avDumpFormat(br_ctx->output_fmt_ctx, 0, output_url, 1);
 
+  br_ctx->error = -1;
   return br_ctx;
 }
 
@@ -320,6 +336,8 @@ void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_si
   AVCodecContext *c;
   uint8_t *filtered_data = NULL, *keyframe_data = NULL;
 
+  LOGI("ffmpbr_write_packet data_size:%d\n",data_size);
+
   packet = av_malloc(sizeof(AVPacket));
   if (!packet) {
     LOGE("ERROR: ffmpbr_write_packet couldn't allocate memory for the AVPacket");
@@ -350,18 +368,33 @@ void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_si
   _write_packet(br_ctx, packet);
 
   // clean up
+  LOGD("clean up");
+/*  
   if (filtered_data) {
     av_free(filtered_data);
-  }
+    filtered_data = NULL;
+  }*/
+
   if (keyframe_data) {
     av_free(keyframe_data);
   }
-  av_free_packet(packet);
+
+  LOGD("av_free_packet");
+
+  if(!is_video)
+  {
+  	av_free_packet(packet);
+  }
+
+  av_free(packet);
 }
 
 void ffmpbr_finalize(FFmpegBridgeContext *br_ctx) {
   // write the file trailer
-  _write_trailer(br_ctx);
+  if(br_ctx->error==-1)
+  {
+  	_write_trailer(br_ctx);
+  }
 
   // close the output file
   if (!(br_ctx->output_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {

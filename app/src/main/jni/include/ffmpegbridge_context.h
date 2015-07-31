@@ -7,6 +7,11 @@
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 
+enum FFMPEG_BRIDGE_ERROR
+{
+	IO_ERROR = 0,
+};
+
 typedef struct
 {
   // context -- must be memory-managed
@@ -37,6 +42,9 @@ typedef struct
   int audio_sample_rate;
   int audio_num_channels;
   int audio_bit_rate;
+
+  //error
+  int error;
 } FFmpegBridgeContext;
 
 

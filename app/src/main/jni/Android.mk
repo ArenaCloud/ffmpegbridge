@@ -13,6 +13,6 @@ LOCAL_SRC_FILES := ffmpegbridge.c ffmpegbridge_context.c logdump.c
 LOCAL_CFLAGS := -I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/../prebuilt/include
 LOCAL_LDLIBS += -llog
 LOCAL_LDLIBS += -L$(LOCAL_PATH)/../prebuilt/lib
-LOCAL_LDLIBS += -lcrypto -lssl -lrtmp-1 -lavcodec-55 -lavdevice-55 -lavfilter-4 -lavformat-55 -lavutil-52 -lswresample-0 -lswscale-2
+LOCAL_LDLIBS += -lffmpeg
 
 include $(BUILD_SHARED_LIBRARY)
