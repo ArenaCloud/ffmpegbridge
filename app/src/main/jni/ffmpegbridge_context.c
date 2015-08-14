@@ -156,7 +156,7 @@ int _open_output_url(FFmpegBridgeContext *br_ctx){
   }
 }
 
-static AVBitStreamFilterContext* bsfc = NULL;
+//static AVBitStreamFilterContext* bsfc = NULL;
 uint8_t* _filter_packet(FFmpegBridgeContext *br_ctx, AVStream *st, AVPacket *packet) {
   int rc = 0;
   uint8_t *filtered_data = NULL;
@@ -165,15 +165,15 @@ uint8_t* _filter_packet(FFmpegBridgeContext *br_ctx, AVStream *st, AVPacket *pac
   if (st->codec->codec_id == br_ctx->audio_codec_id) {
     LOGD("About to filter audio packet buffer ...");
     
-    if(bsfc==NULL)
+    if(br_ctx->bsfc==NULL)
     {
-    	bsfc = av_bitstream_filter_init("aac_adtstoasc");
+    	br_ctx->bsfc = av_bitstream_filter_init("aac_adtstoasc");
     }
 //    AVBitStreamFilterContext* bsfc = av_bitstream_filter_init("aac_adtstoasc");
-    if (!bsfc) {
+    if (!br_ctx->bsfc) {
       LOGE("Error creating aac_adtstoasc bitstream filter.");
     }
-    rc = av_bitstream_filter_filter(bsfc, st->codec, NULL,
+    rc = av_bitstream_filter_filter(br_ctx->bsfc, st->codec, NULL,
       &filtered_data, &filtered_data_size,
       packet->data, packet->size,
       packet->flags & AV_PKT_FLAG_KEY);
@@ -250,6 +250,8 @@ FFmpegBridgeContext* ffmpbr_init(
 
   // allocate the memory
   FFmpegBridgeContext *br_ctx = av_malloc(sizeof(FFmpegBridgeContext));
+
+  br_ctx->bsfc = NULL;
 
   // defaults -- likely not overridden
   br_ctx->video_codec_id = CODEC_ID_H264;
@@ -390,10 +392,18 @@ void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_si
 }
 
 void ffmpbr_finalize(FFmpegBridgeContext *br_ctx) {
+  if(br_ctx==NULL) return;
+  
   // write the file trailer
   if(br_ctx->error==-1)
   {
   	_write_trailer(br_ctx);
+  }
+
+  if(br_ctx->bsfc!=NULL)
+  {
+      av_bitstream_filter_close(br_ctx->bsfc);
+      br_ctx->bsfc=NULL;
   }
 
   // close the output file
@@ -407,4 +417,6 @@ void ffmpbr_finalize(FFmpegBridgeContext *br_ctx) {
   if (br_ctx->output_url) av_free(br_ctx->output_url);
   if (br_ctx->output_fmt_ctx) avformat_free_context(br_ctx->output_fmt_ctx);
   av_free(br_ctx);
+
+  br_ctx = NULL;
 }

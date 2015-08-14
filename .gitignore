@@ -4,3 +4,17 @@
 .DS_Store
 /build
 /app/src/main/obj/local/armeabi/objs
+
+ffmpegbridge.IAB
+ffmpegbridge.IAD
+ffmpegbridge.IMB
+ffmpegbridge.IMD
+ffmpegbridge.iml
+ffmpegbridge.PFI
+ffmpegbridge.PO
+ffmpegbridge.PR
+ffmpegbridge.PRI
+ffmpegbridge.PS
+ffmpegbridge.SearchResults
+ffmpegbridge.WK3
+

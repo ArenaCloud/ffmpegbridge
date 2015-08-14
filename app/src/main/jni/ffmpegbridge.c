@@ -12,7 +12,7 @@
 
 
 // our context object
-FFmpegBridgeContext* br_ctx;
+static FFmpegBridgeContext* br_ctx = NULL;
 
 
 //
@@ -58,6 +58,13 @@ JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
   audio_num_channels = (*env)->GetIntField(env, jOpts, jAudioNumChannelsId);
   audio_bit_rate = (*env)->GetIntField(env, jOpts, jAudioBitRateId);
 
+  // 
+  if(br_ctx!=NULL)
+  {
+  	ffmpbr_finalize(br_ctx);
+	br_ctx = NULL;
+  }
+  
   // initialize our context
   br_ctx = ffmpbr_init(output_fmt_name, output_url,
     video_width, video_height, video_fps, video_bit_rate,
@@ -72,6 +79,8 @@ JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
 JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setAudioCodecExtraData
 (JNIEnv *env, jobject self, jbyteArray jData, jint jSize) {
 
+  if(br_ctx==NULL) return;
+
   LOGD("setAudioCodecExtraData");
 
   jbyte* raw_bytes = (*env)->GetByteArrayElements(env, jData, NULL);
@@ -84,6 +93,8 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setAudioCodecExtra
 
 JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setVideoCodecExtraData
 (JNIEnv *env, jobject self, jbyteArray jData, jint jSize) {
+
+  if(br_ctx==NULL) return;
 
   LOGD("setVideoCodecExtraData");
 
@@ -98,6 +109,8 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setVideoCodecExtra
 JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writeHeader
   (JNIEnv *env, jobject self) {
 
+  if(br_ctx==NULL) return;
+
   LOGD("writeHeader");
 
   ffmpbr_write_header(br_ctx);
@@ -107,6 +120,8 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
 (JNIEnv *env, jobject self, jobject jData, jint jSize, jlong jPts,
  jint jIsVideo, jint jIsVideoKeyframe) {
 
+  if(br_ctx==NULL) return;
+
   uint8_t *data = (*env)->GetDirectBufferAddress(env, jData);
   int is_video = (((int)jIsVideo) == JNI_TRUE);
   int is_video_keyframe = (((int)jIsVideoKeyframe) == JNI_TRUE);
@@ -115,11 +130,15 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
   ffmpbr_write_packet(br_ctx, data, (int)jSize, (long)jPts, is_video, is_video_keyframe);
 }
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_finalize
+JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_releaseResource
 (JNIEnv *env, jobject self) {
+
+  if(br_ctx==NULL) return;
 
   LOGD("finalize");
 
   // write out the trailer and clean up
   ffmpbr_finalize(br_ctx);
+
+  br_ctx = NULL;
 }

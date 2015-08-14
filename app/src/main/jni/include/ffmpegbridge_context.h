@@ -45,6 +45,9 @@ typedef struct
 
   //error
   int error;
+
+  // filter
+  AVBitStreamFilterContext* bsfc;
 } FFmpegBridgeContext;
 
 
