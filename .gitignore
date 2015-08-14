@@ -3,7 +3,7 @@
 /.idea/workspace.xml
 .DS_Store
 /build
-/app/src/main/obj/local/armeabi/objs
+/app/src/main/obj/
 
 ffmpegbridge.IAB
 ffmpegbridge.IAD
