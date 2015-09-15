@@ -7,11 +7,6 @@
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 
-enum FFMPEG_BRIDGE_ERROR
-{
-	IO_ERROR = 0,
-};
-
 typedef struct
 {
   // context -- must be memory-managed
@@ -69,7 +64,7 @@ void ffmpbr_set_video_codec_extradata(FFmpegBridgeContext *br_ctx, const int8_t 
 
 void ffmpbr_write_header(FFmpegBridgeContext *br_ctx);
 
-void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_size, long pts,
+int ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_size, long pts,
     int is_video, int is_video_keyframe);
 
 void ffmpbr_finalize(FFmpegBridgeContext *br_ctx);

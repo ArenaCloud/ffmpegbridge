@@ -116,18 +116,18 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writeHeader
   ffmpbr_write_header(br_ctx);
 }
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
+JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
 (JNIEnv *env, jobject self, jobject jData, jint jSize, jlong jPts,
  jint jIsVideo, jint jIsVideoKeyframe) {
 
-  if(br_ctx==NULL) return;
+  if(br_ctx==NULL) return 0;
 
   uint8_t *data = (*env)->GetDirectBufferAddress(env, jData);
   int is_video = (((int)jIsVideo) == JNI_TRUE);
   int is_video_keyframe = (((int)jIsVideoKeyframe) == JNI_TRUE);
 
   // write the packet
-  ffmpbr_write_packet(br_ctx, data, (int)jSize, (long)jPts, is_video, is_video_keyframe);
+  return ffmpbr_write_packet(br_ctx, data, (int)jSize, (long)jPts, is_video, is_video_keyframe);
 }
 
 JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_releaseResource

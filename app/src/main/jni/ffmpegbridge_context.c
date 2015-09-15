@@ -206,7 +206,7 @@ void _rescale_packet(FFmpegBridgeContext *br_ctx, AVStream *st, AVPacket *packet
   packet->dts = av_rescale_q(packet->dts, *(br_ctx->device_time_base), st->time_base);
 }
 
-void _write_packet(FFmpegBridgeContext *br_ctx, AVPacket *packet) {
+int _write_packet(FFmpegBridgeContext *br_ctx, AVPacket *packet) {
   int rc;
 
   LOGD("start writing frame to stream %d: (pts=%lld, size=%d)",
@@ -220,6 +220,8 @@ void _write_packet(FFmpegBridgeContext *br_ctx, AVPacket *packet) {
 
     LOGD("end writing frame to stream %d: (pts=%lld, size=%d)",
     packet->stream_index, packet->pts, packet->size);
+
+   return rc;
 }
 
 void _write_trailer(FFmpegBridgeContext *br_ctx){
@@ -229,7 +231,6 @@ void _write_trailer(FFmpegBridgeContext *br_ctx){
     LOGE("Error writing trailer: %s", av_err2str(rc));
   }
 }
-
 
 //
 //-- FFmpegBridgeContext API
@@ -290,14 +291,14 @@ FFmpegBridgeContext* ffmpbr_init(
   rc = _open_output_url(br_ctx);
   if (rc < 0){
     LOGE("ERROR: ffmpbr_prepare_stream error -- %s", av_err2str(rc));
-    br_ctx->error = IO_ERROR;
+    br_ctx->error = rc;
     return br_ctx;
   }
 
   LOGD("logging (dumping) output_fmt_ctx log ...");
   avDumpFormat(br_ctx->output_fmt_ctx, 0, output_url, 1);
 
-  br_ctx->error = -1;
+  br_ctx->error = 0;
   return br_ctx;
 }
 
@@ -331,7 +332,7 @@ void ffmpbr_write_header(FFmpegBridgeContext *br_ctx) {
   }
 }
 
-void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_size, long pts,
+int ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_size, long pts,
     int is_video, int is_video_keyframe) {
   AVPacket *packet;
   AVStream *st;
@@ -367,7 +368,8 @@ void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_si
   _rescale_packet(br_ctx, st, packet);
 
   // write the frame
-  _write_packet(br_ctx, packet);
+  int ret = 0;
+  ret = _write_packet(br_ctx, packet);
 
   // clean up
   LOGD("clean up");
@@ -389,16 +391,18 @@ void ffmpbr_write_packet(FFmpegBridgeContext *br_ctx, uint8_t *data, int data_si
   }
 
   av_free(packet);
+
+  return ret;
 }
 
 void ffmpbr_finalize(FFmpegBridgeContext *br_ctx) {
   if(br_ctx==NULL) return;
   
-  // write the file trailer
-  if(br_ctx->error==-1)
+ // write the file trailer
+ /* if(br_ctx->error==0)
   {
   	_write_trailer(br_ctx);
-  }
+  }*/
 
   if(br_ctx->bsfc!=NULL)
   {

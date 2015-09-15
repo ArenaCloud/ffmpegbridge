@@ -44,7 +44,7 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writeHeader
  * Method:    writePacket
  * Signature: (Ljava/nio/ByteBuffer;ILII)V
  */
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
+JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
 (JNIEnv *, jobject, jobject, jint, jlong, jint, jint);
 
 /*
