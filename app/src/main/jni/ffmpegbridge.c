@@ -19,7 +19,7 @@ static FFmpegBridgeContext* br_ctx = NULL;
 // JNI interface
 //
 
-JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
+JNIEXPORT jint JNICALL Java_com_arenacloud_broadcast_ffmpegbridge_FFmpegBridge_init
 (JNIEnv *env, jobject jThis, jobject jOpts) {
 
   const char *output_fmt_name, *output_url;
@@ -76,7 +76,7 @@ JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_init
   return br_ctx->error;
 }
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setAudioCodecExtraData
+JNIEXPORT void JNICALL Java_com_arenacloud_broadcast_ffmpegbridge_FFmpegBridge_setAudioCodecExtraData
 (JNIEnv *env, jobject self, jbyteArray jData, jint jSize) {
 
   if(br_ctx==NULL) return;
@@ -91,7 +91,7 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setAudioCodecExtra
   (*env)->ReleaseByteArrayElements(env, jData, raw_bytes, 0);
 }
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setVideoCodecExtraData
+JNIEXPORT void JNICALL Java_com_arenacloud_broadcast_ffmpegbridge_FFmpegBridge_setVideoCodecExtraData
 (JNIEnv *env, jobject self, jbyteArray jData, jint jSize) {
 
   if(br_ctx==NULL) return;
@@ -106,7 +106,7 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_setVideoCodecExtra
   (*env)->ReleaseByteArrayElements(env, jData, raw_bytes, 0);
 }
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writeHeader
+JNIEXPORT void JNICALL Java_com_arenacloud_broadcast_ffmpegbridge_FFmpegBridge_writeHeader
   (JNIEnv *env, jobject self) {
 
   if(br_ctx==NULL) return;
@@ -116,7 +116,7 @@ JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writeHeader
   ffmpbr_write_header(br_ctx);
 }
 
-JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
+JNIEXPORT jint JNICALL Java_com_arenacloud_broadcast_ffmpegbridge_FFmpegBridge_writePacket
 (JNIEnv *env, jobject self, jobject jData, jint jSize, jlong jPts,
  jint jIsVideo, jint jIsVideoKeyframe) {
 
@@ -130,7 +130,7 @@ JNIEXPORT jint JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_writePacket
   return ffmpbr_write_packet(br_ctx, data, (int)jSize, (long)jPts, is_video, is_video_keyframe);
 }
 
-JNIEXPORT void JNICALL Java_io_cine_ffmpegbridge_FFmpegBridge_releaseResource
+JNIEXPORT void JNICALL Java_com_arenacloud_broadcast_ffmpegbridge_FFmpegBridge_releaseResource
 (JNIEnv *env, jobject self) {
 
   if(br_ctx==NULL) return;
